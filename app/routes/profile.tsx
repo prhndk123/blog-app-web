@@ -48,9 +48,7 @@ export default function Profile() {
 
     formData.append("photo", data.photo);
 
-    const result = await axiosInstance2.post("/users/photo", formData, {
-      headers: { Authorization: `Bearer ${user?.accessToken}` },
-    });
+    const result = await axiosInstance2.post("/users/photo", formData);
 
     login(result.data);
 

@@ -5,4 +5,5 @@ export const axiosInstance = axios.create({
 });
 export const axiosInstance2 = axios.create({
   baseURL: "http://localhost:8000",
+  withCredentials: true,
 });
