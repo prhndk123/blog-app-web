@@ -16,13 +16,16 @@ import { axiosInstance2 } from "~/lib/axios";
 import { useAuth } from "~/stores/useAuth";
 
 const formSchema = z.object({
-  photo: z.instanceof(File).refine(
-    (file) => file.size <= 2 * 1024 * 1024, // 2MB
-    "File size must be less than 2MB"
-  ).refine(
-    (file) => ["image/jpeg", "image/png", "image/webp"].includes(file.type),
-    "Only JPEG, PNG, and WebP images are allowed"
-  ),
+  photo: z
+    .instanceof(File)
+    .refine(
+      (file) => file.size <= 2 * 1024 * 1024, // 2MB
+      "File size must be less than 2MB",
+    )
+    .refine(
+      (file) => ["image/jpeg", "image/png", "image/webp"].includes(file.type),
+      "Only JPEG, PNG, and WebP images are allowed",
+    ),
 });
 
 export const clientLoader = () => {
@@ -43,19 +46,10 @@ export default function Profile() {
       const formData = new FormData();
       formData.append("photo", data.photo);
 
-      await axiosInstance2.post("/users/photo", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
+      await axiosInstance2.post("/users/photo", formData);
 
       // Fetch updated user data
-      const response = await axiosInstance2.get(`/users/${user?.id}`, {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
+      const response = await axiosInstance2.get(`/users/${user?.id}`);
 
       // Update user in store
       updateUser(response.data);
@@ -109,7 +103,9 @@ export default function Profile() {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="form-upload-photo">Upload Photo</FieldLabel>
+                  <FieldLabel htmlFor="form-upload-photo">
+                    Upload Photo
+                  </FieldLabel>
                   <Input
                     id="form-upload-photo"
                     type="file"
