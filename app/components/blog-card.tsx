@@ -3,15 +3,13 @@ import { Card, CardContent, CardFooter } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import type { Blog } from "types/blog";
 
-
-
 interface BlogCardProps {
   blog: Blog;
 }
 
 const BlogCard = ({ blog }: BlogCardProps) => {
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString("en-US", {
+  const formatDate = (date: Date) => {
+    return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -19,7 +17,7 @@ const BlogCard = ({ blog }: BlogCardProps) => {
   };
 
   return (
-    <Link to={`/blogs/${blog.objectId}`}>
+    <Link to={`/blogs/${blog.slug}`}>
       <Card className="h-full overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
         <div className="aspect-video overflow-hidden">
           <img
@@ -41,8 +39,8 @@ const BlogCard = ({ blog }: BlogCardProps) => {
         </CardContent>
         <CardFooter className="px-4 pb-4 pt-0">
           <div className="flex items-center justify-between w-full text-sm text-muted-foreground">
-            <span>{blog.author}</span>
-            <span>{formatDate(blog.created)}</span>
+            <span className="capitalize">{blog.user.name}</span>
+            <span>{formatDate(blog.createdAt)}</span>
           </div>
         </CardFooter>
       </Card>

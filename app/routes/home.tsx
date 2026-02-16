@@ -4,10 +4,14 @@ import BlogCard from "~/components/blog-card";
 import Footer from "~/components/footer";
 import Navbar from "~/components/navbar";
 import { Input } from "~/components/ui/input";
-import { axiosInstance } from "~/lib/axios";
+import { axiosInstance, axiosInstance2 } from "~/lib/axios";
 import type { Route } from "./+types/home";
 import type { Blog } from "types/blog";
 import { useQuery } from "@tanstack/react-query";
+import type { PaginationResponse } from "types/pagination";
+import PaginationSection from "~/components/pagination-section";
+import { useDebounceValue } from "usehooks-ts";
+import { parseAsInteger, useQueryState } from "nuqs";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -17,15 +21,28 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-const {data : Blogs, isPending} = useQuery({
-  queryKey: ["blogs"],
-  queryFn: async () => {
-    const {data} = await axiosInstance <Blog[]> (
-      "/api/data/Blogs?sortBy=%60created%60%20desc"
-    );
-    return data
-  }
-})
+  const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
+  const [search, setSearch] = useQueryState("search", {
+    defaultValue: "",
+  });
+  const [debouncedValue] = useDebounceValue(search, 500);
+  const queryParams = {
+    page,
+    take: 1,
+    search: debouncedValue,
+  };
+  const { data: Blogs, isPending } = useQuery({
+    queryKey: ["blogs", queryParams],
+    queryFn: async () => {
+      const { data } = await axiosInstance2<PaginationResponse<Blog>>(
+        "/blogs",
+        {
+          params: queryParams,
+        },
+      );
+      return data;
+    },
+  });
 
   const [logs, setBlogs] = useState<Blog[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -68,6 +85,8 @@ const {data : Blogs, isPending} = useQuery({
               type="text"
               placeholder="Search blogs..."
               className="pl-10"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
         </div>
@@ -79,11 +98,23 @@ const {data : Blogs, isPending} = useQuery({
           </div>
         )}
 
+        {!isPending && !Blogs?.data.length && (
+          <div className="flex justify-center items-center h-[40vh]">
+            <p>No blogs found</p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {Blogs?.map((blog) => (
-            <BlogCard key={blog.objectId} blog={blog} />
+          {Blogs?.data.map((blog) => (
+            <BlogCard key={blog.id} blog={blog} />
           ))}
         </div>
+        {!!Blogs?.meta && (
+          <PaginationSection
+            meta={Blogs.meta}
+            onPageChange={(page) => setPage(page)}
+          />
+        )}
       </main>
       <Footer />
     </div>

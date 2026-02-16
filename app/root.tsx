@@ -9,7 +9,7 @@ import {
 } from "react-router";
 
 import { Toaster } from "./components/ui/sonner";
-
+import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
 import type { Route } from "./+types/root";
 import "./app.css";
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -51,7 +51,9 @@ export default function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <QueryClientProvider client={queryClient}>
-        <Outlet />
+        <NuqsAdapter>
+          <Outlet />
+        </NuqsAdapter>
         <Toaster richColors position="top-right" closeButton />
       </QueryClientProvider>
     </GoogleOAuthProvider>
