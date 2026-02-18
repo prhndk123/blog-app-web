@@ -2,20 +2,13 @@ import { Link } from "react-router";
 import { Card, CardContent, CardFooter } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import type { Blog } from "types/blog";
+import { formatDate } from "~/utils/formatter";
 
 interface BlogCardProps {
   blog: Blog;
 }
 
 const BlogCard = ({ blog }: BlogCardProps) => {
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   return (
     <Link to={`/blogs/${blog.slug}`}>
       <Card className="h-full overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
