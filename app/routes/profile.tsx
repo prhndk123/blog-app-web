@@ -12,8 +12,8 @@ import {
 } from "~/components/ui/card";
 import { Field, FieldError, FieldLabel } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
-import { axiosInstance2 } from "~/lib/axios";
 import { useAuth } from "~/stores/useAuth";
+import { useUpdateProfile } from "~/hooks/api/useUpdateProfile";
 
 const formSchema = z.object({
   photo: z
@@ -35,29 +35,16 @@ export const clientLoader = () => {
 };
 
 export default function Profile() {
-  const { user, updateUser } = useAuth();
+  const { user } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   });
 
-  async function onSubmit(data: z.infer<typeof formSchema>) {
-    try {
-      const formData = new FormData();
-      formData.append("photo", data.photo);
+  const { mutate: updateProfile, isPending: isUploading } = useUpdateProfile();
 
-      await axiosInstance2.post("/users/photo", formData);
-
-      // Fetch updated user data
-      const response = await axiosInstance2.get(`/users/${user?.id}`);
-
-      // Update user in store
-      updateUser(response.data);
-
-      alert("Photo uploaded successfully!");
-    } catch (error) {
-      alert("Error uploading photo");
-    }
+  function onSubmit(data: z.infer<typeof formSchema>) {
+    updateProfile(data.photo);
   }
 
   if (!user) return null;
@@ -124,8 +111,13 @@ export default function Profile() {
               )}
             />
 
-            <Button type="submit" form="form-upload-photo" className="w-full">
-              Upload Photo
+            <Button
+              type="submit"
+              form="form-upload-photo"
+              className="w-full"
+              disabled={isUploading}
+            >
+              {isUploading ? "Uploading..." : "Upload Photo"}
             </Button>
           </form>
         </CardContent>

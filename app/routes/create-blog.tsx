@@ -1,8 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { AxiosError } from "axios";
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Link, redirect, useNavigate } from "react-router";
+import { toast } from "sonner";
 import * as z from "zod";
 import Footer from "~/components/footer";
 import Navbar from "~/components/navbar";
@@ -24,8 +26,9 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Textarea } from "~/components/ui/textarea";
-import { axiosInstance } from "~/lib/axios";
+import { axiosInstance2 } from "~/lib/axios";
 import { useAuth } from "~/stores/useAuth";
+import { useCreateBlog } from "~/hooks/api/useCreateBlog";
 
 interface ThumbnailResponse {
   fileURL: string;
@@ -47,7 +50,6 @@ const formSchema = z.object({
   title: z.string().min(1, "Title is required.").max(255),
   description: z.string().min(1, "Description is required.").max(500),
   category: z.string().min(1, "Category is required."),
-  author: z.string().min(1, "Author is required.").max(100),
   thumbnail: z.instanceof(File),
   content: z.string().min(1, "Content is required."),
 });
@@ -65,44 +67,18 @@ export default function CreateBlog() {
       title: "",
       description: "",
       category: "",
-      author: "",
       thumbnail: undefined,
       content: "",
     },
   });
 
+  const { mutate: createBlog, isPending: isLoading } = useCreateBlog();
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  async function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsLoading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", data.thumbnail);
-
-      const folderName = "images";
-      const fileName = Date.now() + Math.floor(Math.random() * 1000);
-      const response = await axiosInstance.post<ThumbnailResponse>(
-        `/api/files/${folderName}/${fileName}`,
-        formData,
-      );
-
-      await axiosInstance.post("/api/data/Blogs", {
-        author: data.author,
-        category: data.category,
-        content: data.content,
-        description: data.description,
-        thumbnail: response.data.fileURL,
-        title: data.title,
-      });
-
-      alert("Blog created successfully!");
-      navigate("/");
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
+  function onSubmit(data: z.infer<typeof formSchema>) {
+    createBlog({
+      ...data,
+      thumbnail: data.thumbnail,
+    });
   }
 
   return (
@@ -202,26 +178,6 @@ export default function CreateBlog() {
                       </SelectContent>
                     </Select>
 
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-
-              {/* Author */}
-              <Controller
-                name="author"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="author">Author</FieldLabel>
-                    <Input
-                      {...field}
-                      id="author"
-                      aria-invalid={fieldState.invalid}
-                      placeholder="Enter author name"
-                    />
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}

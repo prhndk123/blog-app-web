@@ -13,10 +13,10 @@ import {
 } from "~/components/ui/card";
 import { Field, FieldError, FieldLabel } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
-import { axiosInstance, axiosInstance2 } from "~/lib/axios";
 import { useAuth } from "~/stores/useAuth";
 import { useGoogleLogin } from "@react-oauth/google";
-import { AxiosError } from "axios";
+import { useLogin } from "~/hooks/api/useLogin";
+import { useGoogleAuth } from "~/hooks/api/useGoogleAuth";
 
 const formSchema = z.object({
   email: z.email({ error: "Invalid email address." }),
@@ -29,8 +29,8 @@ export const clientLoader = () => {
 };
 
 export default function Login() {
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const { mutate: login, isPending: isLoginPending } = useLogin();
+  const { mutate: googleLogin, isPending: isGooglePending } = useGoogleAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -40,34 +40,13 @@ export default function Login() {
     },
   });
 
-  async function onSubmit(data: z.infer<typeof formSchema>) {
-    try {
-      const response = await axiosInstance2.post("/auth/login", {
-        email: data.email,
-        password: data.password,
-      });
-
-      login({ ...response.data });
-
-      navigate("/");
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        alert(error.response?.data.message || "Something went wrong");
-      }
-    }
+  function onSubmit(data: z.infer<typeof formSchema>) {
+    login(data);
   }
 
   const handleLogin = useGoogleLogin({
     onSuccess: async ({ access_token }) => {
-      try {
-        const response = await axiosInstance2.post("/auth/google", {
-          accessToken: access_token,
-        });
-        login({ ...response.data });
-        navigate("/");
-      } catch (error) {
-        alert("Error login with Google");
-      }
+      googleLogin({ accessToken: access_token });
     },
     onError: (error) => {
       console.log("Login Failed:", error);
@@ -136,8 +115,13 @@ export default function Login() {
             />
 
             {/* Submit Button */}
-            <Button type="submit" form="form-login" className="w-full">
-              Login
+            <Button
+              type="submit"
+              form="form-login"
+              className="w-full"
+              disabled={isLoginPending}
+            >
+              {isLoginPending ? "Loading..." : "Login"}
             </Button>
 
             <Button

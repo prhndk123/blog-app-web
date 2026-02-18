@@ -13,7 +13,7 @@ import {
 } from "~/components/ui/card";
 import { Field, FieldError, FieldLabel } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
-import { axiosInstance2 } from "~/lib/axios";
+import { useRegister } from "~/hooks/api/useRegister";
 
 const formSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters."),
@@ -22,8 +22,6 @@ const formSchema = z.object({
 });
 
 export default function Register() {
-  const navigate = useNavigate();
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -33,19 +31,10 @@ export default function Register() {
     },
   });
 
-  async function onSubmit(data: z.infer<typeof formSchema>) {
-    try {
-      await axiosInstance2.post("/auth/register", {
-        name: data.name,
-        email: data.email,
-        password: data.password,
-      });
+  const { mutate: register, isPending: isLoading } = useRegister();
 
-      alert("Register success!");
-      navigate("/login");
-    } catch (error) {
-      alert("Error login");
-    }
+  function onSubmit(data: z.infer<typeof formSchema>) {
+    register(data);
   }
 
   return (
@@ -128,8 +117,13 @@ export default function Register() {
             />
 
             {/* Submit Button */}
-            <Button type="submit" form="form-register" className="w-full">
-              Register
+            <Button
+              type="submit"
+              form="form-register"
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? "Loading..." : "Register"}
             </Button>
           </form>
         </CardContent>

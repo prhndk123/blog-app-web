@@ -9,15 +9,10 @@ import { Button } from "~/components/ui/button";
 import { axiosInstance2 } from "~/lib/axios";
 import { formatDate } from "~/utils/formatter";
 import type { Route } from "./+types/blog";
+import { useGetBlog } from "~/hooks/api/useGetBlog";
 
 export default function Blog({ params }: Route.ComponentProps) {
-  const { data: blog, isPending } = useQuery({
-    queryKey: ["blog", params.slug],
-    queryFn: async () => {
-      const { data } = await axiosInstance2<Blog>(`/blogs/${params.slug}`);
-      return data;
-    },
-  });
+  const { data: blog, isPending } = useGetBlog(params.slug);
 
   if (isPending) {
     return (

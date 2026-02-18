@@ -7,11 +7,10 @@ import { Input } from "~/components/ui/input";
 import { axiosInstance, axiosInstance2 } from "~/lib/axios";
 import type { Route } from "./+types/home";
 import type { Blog } from "types/blog";
-import { useQuery } from "@tanstack/react-query";
-import type { PaginationResponse } from "types/pagination";
-import PaginationSection from "~/components/pagination-section";
 import { useDebounceValue } from "usehooks-ts";
 import { parseAsInteger, useQueryState } from "nuqs";
+import { useGetBlogs } from "~/hooks/api/useGetBlogs";
+import PaginationSection from "~/components/pagination-section";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -31,36 +30,11 @@ export default function Home() {
     take: 1,
     search: debouncedValue,
   };
-  const { data: Blogs, isPending } = useQuery({
-    queryKey: ["blogs", queryParams],
-    queryFn: async () => {
-      const { data } = await axiosInstance2<PaginationResponse<Blog>>(
-        "/blogs",
-        {
-          params: queryParams,
-        },
-      );
-      return data;
-    },
-  });
+  const { data: Blogs, isPending } = useGetBlogs(queryParams);
 
-  const [logs, setBlogs] = useState<Blog[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  const getBlogs = async () => {
-    try {
-      const { data } = await axiosInstance("/api/data/Blogs");
-      setBlogs(data);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    getBlogs();
-  }, []);
+  // const [logs, setBlogs] = useState<Blog[]>([]); // logs unused
+  // const [isLoading, setIsLoading] = useState<boolean>(true); // isLoading unused
+  // const getBlogs = async () => ... (removed)
 
   return (
     <div>
